@@ -17,6 +17,8 @@ if __name__ == "__main__":
     title = " with drop" if WITH_DROP else ""
     filename = "_with_drop" if WITH_DROP else ""
 
+    print(person_statistics["arrival"], person_statistics["access"])
+
     df = person_statistics
     queue_duration = df["access"] - df["arrival"]
     plt.figure()
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     plt.savefig(f"wait_time{filename}.png", dpi=600)
 
     df = person_statistics
-    queue_duration = (df["access"] - df["arrival"]) / df["id"]
+    queue_duration = df["access"] - df["arrival"]
     df = queue_duration.cumsum()
     plt.figure()
     queue_duration.plot()
@@ -36,7 +38,8 @@ if __name__ == "__main__":
     plt.title(f"Cumulative summation of time waiting in queue{title}")
     plt.savefig(f"cumsum_wait_time{filename}.png", dpi=600)
 
-    print(queue_duration.mean(axis=0))
+    print(queue_duration)
+    print(queue_duration.mean())
 
     df = time_series
     df = df[["timestamp", "queue_size"]]

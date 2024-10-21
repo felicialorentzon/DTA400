@@ -5,16 +5,20 @@ import simpy
 # fmt: off
 RANDOM_SEED = 42
 NUM_CHANNELS = 99999   # Number of channels in the phone service
-NUM_PHONES = 20        # Number of phones in the phone booth
-MAX_CALL_TIME = 80     # Duration of a call and the minutes the person can afford to call
+NUM_PHONES = 700       # Number of phones in the phone booth
+MAX_CALL_TIME = 160    # Duration of a call and the minutes the person can afford to call
+SERVICE_RATE = NUM_PHONES / (MAX_CALL_TIME / 2) * 60
 CALL_SETUP_TIME = 0.5  # The timestamp to authenticate and dial a peer
-NUM_PERSONS = 600      # Number of persons in the group
+NUM_PERSONS = 6000      # Number of persons in the group
 CALL_DROP_RATE = 0.95  # The probability that calls are droped when high load
-CALL_DROP_AMOUNT = 34  # The number of active calls required before service starts failing
-TIME_INTERVAL = 2      # The interval a person arrives
+CALL_DROP_AMOUNT = 30  # The number of active calls required before service starts failing
+ARRIVAL_RATE = 50
+TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
 DEBUG = False
 # fmt: on
 
+print(f"Service rate: {SERVICE_RATE}")
+print(f"Arrival rate: {ARRIVAL_RATE}")
 
 queue_size = 0
 active_channels = 0
@@ -161,7 +165,7 @@ def setup(env, db: sqlite3.Cursor, time_interval):
     global queue_size
 
     for person in persons:
-        yield env.timeout(random.randint(time_interval - 2, time_interval + 2))
+        yield env.timeout(random.random() * time_interval)
 
         printer(f"Person {person.id} arrives at the phone booth at {env.now:.2f}")
         person.arrival = env.now
