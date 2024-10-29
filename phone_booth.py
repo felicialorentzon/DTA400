@@ -1,3 +1,4 @@
+import sys
 import sqlite3
 import random
 import simpy
@@ -7,9 +8,7 @@ from math import floor
 # fmt: off
 RANDOM_SEED = 42
 NUM_CHANNELS = 99999   # Number of channels in the phone service
-NUM_PHONES = 20       # Number of phones in the phone booth
 MAX_CALL_TIME = 160    # Duration of a call and the minutes the person can afford to call
-SERVICE_RATE = NUM_PHONES / (MAX_CALL_TIME / 2) * 60
 CALL_SETUP_TIME = 0.5  # The timestamp to authenticate and dial a peer
 NUM_PERSONS = 800      # Number of persons in the group
 CALL_DROP_RATE = 0.95  # The probability that calls are droped when high load
@@ -18,9 +17,6 @@ ARRIVAL_RATE = 13
 AVERAGE_TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
 DEBUG = False
 # fmt: on
-
-print(f"Service rate: {SERVICE_RATE}")
-print(f"Arrival rate: {ARRIVAL_RATE}")
 
 queue_size = 0
 active_channels = 0
@@ -148,7 +144,10 @@ class PhoneService:
             update(db, "call_start", person.id, person.call_start)
             time_series(db, self.env.now)
 
-            if active_channels > CALL_DROP_AMOUNT and np.random.uniform() > CALL_DROP_RATE:
+            if (
+                active_channels > CALL_DROP_AMOUNT
+                and np.random.uniform() > CALL_DROP_RATE
+            ):
                 active_channels -= 1
                 total_drops += 1
                 raise RuntimeError
@@ -192,6 +191,22 @@ def setup(env, db: sqlite3.Cursor, time_interval):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) <= 1:
+        print("Missing number of phones argument")
+        exit(1)
+
+    try:
+        num_phones = int(sys.argv[1])
+    except Exception:
+        print("Number of phones must be an integer")
+        exit(1)
+
+    average_service_rate = num_phones / (MAX_CALL_TIME / 2) * 60
+    arrival_rate = ARRIVAL_RATE
+
+    print(f"Service rate: {average_service_rate}")
+    print(f"Arrival rate: {arrival_rate}")
+
     with sqlite3.connect("statistics.db", autocommit=True) as db:
         # Create an environment
         env = simpy.Environment()
@@ -199,7 +214,7 @@ if __name__ == "__main__":
         phone_service = PhoneService(env)
 
         # Create the phone booths
-        phone_booth = PhoneBooth(env, phone_service, NUM_PHONES)
+        phone_booth = PhoneBooth(env, phone_service, num_phones)
 
         persons = [
             Person(env, phone_booth, id, floor(np.random.uniform(0, MAX_CALL_TIME)))
