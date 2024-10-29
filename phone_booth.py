@@ -1,19 +1,21 @@
 import sqlite3
 import random
 import simpy
+import numpy as np
+from math import floor
 
 # fmt: off
 RANDOM_SEED = 42
 NUM_CHANNELS = 99999   # Number of channels in the phone service
-NUM_PHONES = 700       # Number of phones in the phone booth
+NUM_PHONES = 20       # Number of phones in the phone booth
 MAX_CALL_TIME = 160    # Duration of a call and the minutes the person can afford to call
 SERVICE_RATE = NUM_PHONES / (MAX_CALL_TIME / 2) * 60
 CALL_SETUP_TIME = 0.5  # The timestamp to authenticate and dial a peer
-NUM_PERSONS = 6000      # Number of persons in the group
+NUM_PERSONS = 800      # Number of persons in the group
 CALL_DROP_RATE = 0.95  # The probability that calls are droped when high load
 CALL_DROP_AMOUNT = 30  # The number of active calls required before service starts failing
-ARRIVAL_RATE = 50
-TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
+ARRIVAL_RATE = 13
+AVERAGE_TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
 DEBUG = False
 # fmt: on
 
@@ -44,21 +46,33 @@ def time_series(db: sqlite3.Cursor, timestamp):
     global previous_timestamp
 
     if timestamp <= previous_timestamp:
-        return
-    previous_timestamp = timestamp
+        db.execute(
+            "UPDATE time_series SET queue_size = ?, active_channels = ?, total_channels = ?, active_calls = ?, total_calls = ?, total_drops = ? WHERE timestamp = ?",
+            (
+                queue_size,
+                active_channels,
+                total_channels,
+                active_calls,
+                total_calls,
+                total_drops,
+                timestamp,
+            ),
+        )
+    else:
+        previous_timestamp = timestamp
 
-    db.execute(
-        "INSERT INTO time_series VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (
-            timestamp,
-            queue_size,
-            active_channels,
-            total_channels,
-            active_calls,
-            total_calls,
-            total_drops,
-        ),
-    )
+        db.execute(
+            "INSERT INTO time_series VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                timestamp,
+                queue_size,
+                active_channels,
+                total_channels,
+                active_calls,
+                total_calls,
+                total_drops,
+            ),
+        )
 
 
 def update(db: sqlite3.Cursor, field: str, id: int, value):
@@ -134,7 +148,7 @@ class PhoneService:
             update(db, "call_start", person.id, person.call_start)
             time_series(db, self.env.now)
 
-            if active_channels > CALL_DROP_AMOUNT and random.random() > CALL_DROP_RATE:
+            if active_channels > CALL_DROP_AMOUNT and np.random.uniform() > CALL_DROP_RATE:
                 active_channels -= 1
                 total_drops += 1
                 raise RuntimeError
@@ -165,7 +179,7 @@ def setup(env, db: sqlite3.Cursor, time_interval):
     global queue_size
 
     for person in persons:
-        yield env.timeout(random.random() * time_interval)
+        yield env.timeout(np.random.uniform() * time_interval * 2)
 
         printer(f"Person {person.id} arrives at the phone booth at {env.now:.2f}")
         person.arrival = env.now
@@ -188,7 +202,7 @@ if __name__ == "__main__":
         phone_booth = PhoneBooth(env, phone_service, NUM_PHONES)
 
         persons = [
-            Person(env, phone_booth, id, random.randint(0, MAX_CALL_TIME))
+            Person(env, phone_booth, id, floor(np.random.uniform(0, MAX_CALL_TIME)))
             for id in range(NUM_PERSONS)
         ]
 
@@ -224,7 +238,7 @@ if __name__ == "__main__":
         random.seed(RANDOM_SEED)  # This helps to reproduce the results
 
         # Start the setup process
-        env.process(setup(env, cursor, TIME_INTERVAL))
+        env.process(setup(env, cursor, AVERAGE_TIME_INTERVAL))
 
         # Execute!
         env.run()
