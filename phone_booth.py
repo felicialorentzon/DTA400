@@ -19,7 +19,7 @@ CALL_DROP_RATE = 0.95                     # The probability that calls are drope
 CALL_DROP_AMOUNT = 30                     # The number of active calls required before service starts failing
 ARRIVAL_RATE = 13                         # How many persons that join the system per hour
 AVERAGE_TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
-DEBUG = False
+LOGGING = False
 # fmt: on
 
 queue_size = 0
@@ -32,7 +32,7 @@ previous_timestamp = -1
 
 
 def printer(message: str):
-    if DEBUG:
+    if LOGGING:
         print(message)
 
 
