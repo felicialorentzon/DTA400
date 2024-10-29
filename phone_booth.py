@@ -36,47 +36,7 @@ def printer(message: str):
         print(message)
 
 
-def time_series(db: sqlite3.Cursor, timestamp):
-    global queue_size
-    global active_channels
-    global total_channels
-    global active_calls
-    global total_calls
-    global total_drops
-    global previous_timestamp
 
-    if timestamp <= previous_timestamp:
-        db.execute(
-            "UPDATE time_series SET queue_size = ?, active_channels = ?, total_channels = ?, active_calls = ?, total_calls = ?, total_drops = ? WHERE timestamp = ?",
-            (
-                queue_size,
-                active_channels,
-                total_channels,
-                active_calls,
-                total_calls,
-                total_drops,
-                timestamp,
-            ),
-        )
-    else:
-        previous_timestamp = timestamp
-
-        db.execute(
-            "INSERT INTO time_series VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (
-                timestamp,
-                queue_size,
-                active_channels,
-                total_channels,
-                active_calls,
-                total_calls,
-                total_drops,
-            ),
-        )
-
-
-def update(db: sqlite3.Cursor, field: str, id: int, value):
-    db.execute(f"UPDATE person_statistics SET {field} = ? WHERE id = ?", (value, id))
 
 
 class PhoneBooth:
@@ -117,12 +77,9 @@ class Person:
 
             printer(f"Person {self.id} enters the phone booth at {self.env.now:.2f}")
             self.access = self.env.now
-            update(db, "access", self.id, self.access)
-            time_series(db, self.env.now)
 
             if self.call_time <= 0:
                 self.insufficient_funds = True
-                update(db, "insufficient_funds", self.id, self.insufficient_funds)
 
             while self.call_time > 0:
                 try:
@@ -133,7 +90,6 @@ class Person:
                     printer(
                         f"Person {self.id} tries calling again at {self.env.now:.2f}"
                     )
-                    time_series(db, self.env.now)
 
 
 class PhoneService:
@@ -151,8 +107,6 @@ class PhoneService:
 
             printer(f"Person {person.id} tries calling at {self.env.now:.2f}")
             person.call_start = self.env.now
-            update(db, "call_start", person.id, person.call_start)
-            time_series(db, self.env.now)
 
             if (
                 active_channels > CALL_DROP_AMOUNT
@@ -174,14 +128,11 @@ class PhoneService:
                 printer(
                     f"Person {person.id} talked for {end - start:.2f} minutes at {self.env.now:.2f}"
                 )
-                time_series(db, self.env.now)
             active_channels -= 1
             active_calls -= 1
         active_channels -= 1
 
         person.finished = self.env.now
-        update(db, "finished", person.id, person.finished)
-        time_series(db, self.env.now)
 
 
 def setup(env, db: sqlite3.Cursor, time_interval):
@@ -192,10 +143,8 @@ def setup(env, db: sqlite3.Cursor, time_interval):
 
         printer(f"Person {person.id} arrives at the phone booth at {env.now:.2f}")
         person.arrival = env.now
-        update(db, "arrival", person.id, person.arrival)
 
         queue_size += 1
-        time_series(db, env.now)
 
         env.process(person.process(db))
 
