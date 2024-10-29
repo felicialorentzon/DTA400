@@ -3,17 +3,21 @@ import sqlite3
 import random
 import simpy
 import numpy as np
-from math import floor
+from math import floor, ceil
 
 # fmt: off
 RANDOM_SEED = 42
-NUM_CHANNELS = 99999   # Number of channels in the phone service
-MAX_CALL_TIME = 160    # Duration of a call and the minutes the person can afford to call
-CALL_SETUP_TIME = 0.5  # The timestamp to authenticate and dial a peer
-NUM_PERSONS = 800      # Number of persons in the group
-CALL_DROP_RATE = 0.95  # The probability that calls are droped when high load
-CALL_DROP_AMOUNT = 30  # The number of active calls required before service starts failing
-ARRIVAL_RATE = 13
+MAX_SATISFACTION = 5                      # The highest level of satisfaction
+MAX_START_SATISFACTION = 5                # The maximum level of satisfaction a person can start with
+MIN_START_SATISFACTION = 2                # The minimum level of satisfaction a person can start with
+MIN_SATISFACTION = 0                      # The amount of satisfaction that will prompt an exit from the system
+NUM_CHANNELS = 99999                      # Number of channels in the phone service
+MAX_CALL_TIME = 160                       # Duration of a call and the minutes the person can afford to call
+CALL_SETUP_TIME = 0.5                     # The timestamp to authenticate and dial a peer
+NUM_PERSONS = 800                         # Number of persons in the group
+CALL_DROP_RATE = 0.95                     # The probability that calls are droped when high load
+CALL_DROP_AMOUNT = 30                     # The number of active calls required before service starts failing
+ARRIVAL_RATE = 13                         # How many persons that join the system per hour
 AVERAGE_TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
 DEBUG = False
 # fmt: on
@@ -85,12 +89,18 @@ class PhoneBooth:
 
 class Person:
     def __init__(
-        self, env: simpy.Environment, phone_booth: PhoneBooth, id: int, call_time: int
+        self,
+        env: simpy.Environment,
+        phone_booth: PhoneBooth,
+        id: int,
+        call_time: int,
+        satisfaction: int,
     ):
         self.env = env
         self.phone_booth = phone_booth
         self.id = id
         self.call_time = call_time
+        self.satisfaction = satisfaction
         self.arrival = 0
         self.access = 0
         self.call_start = 0
@@ -217,7 +227,13 @@ if __name__ == "__main__":
         phone_booth = PhoneBooth(env, phone_service, num_phones)
 
         persons = [
-            Person(env, phone_booth, id, floor(np.random.uniform(0, MAX_CALL_TIME)))
+            Person(
+                env,
+                phone_booth,
+                id,
+                floor(np.random.uniform(0, MAX_CALL_TIME)),
+                ceil(np.random.uniform(MIN_START_SATISFACTION, MAX_START_SATISFACTION)),
+            )
             for id in range(NUM_PERSONS)
         ]
 
