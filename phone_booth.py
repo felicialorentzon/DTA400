@@ -135,10 +135,11 @@ class PhoneService:
         person.finished = self.env.now
 
 
-def setup(env, db: sqlite3.Cursor, time_interval):
+def setup(env, db: sqlite3.Cursor, persons, time_interval):
     global queue_size
 
     for person in persons:
+        assert(isinstance(person, Person))
         yield env.timeout(np.random.uniform() * time_interval * 2)
 
         printer(f"Person {person.id} arrives at the phone booth at {env.now:.2f}")
@@ -218,7 +219,7 @@ if __name__ == "__main__":
         random.seed(RANDOM_SEED)  # This helps to reproduce the results
 
         # Start the setup process
-        env.process(setup(env, cursor, AVERAGE_TIME_INTERVAL))
+        env.process(setup(env, cursor, persons, AVERAGE_TIME_INTERVAL))
 
         # Execute!
         env.run()
