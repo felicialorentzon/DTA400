@@ -187,32 +187,26 @@ if __name__ == "__main__":
             for id in range(NUM_PERSONS)
         ]
 
-        starting_statistics = [
+        start_satisfaction = [
             (
+                num_phones,
                 person.id,
-                person.call_time,
-                person.arrival,
-                person.access,
-                person.call_start,
-                person.finished,
-                person.insufficient_funds,
+                person.satisfaction,
             )
             for person in persons
         ]
 
         cursor = db.cursor()
 
-        cursor.execute(
-            "CREATE TABLE person_statistics(id, start_funds, arrival, access, call_start, finished, insufficient_funds)"
-        )
+        cursor.execute("CREATE TABLE start_satisfaction(num_phones, id, satisfaction)")
 
         cursor.execute(
-            "CREATE TABLE time_series(timestamp, queue_size, active_channels, total_channels, active_calls, total_calls, total_drops)"
+            "CREATE TABLE end_satisfaction(num_phones, id, satisfaction, queue_size, queue_time)"
         )
 
         cursor.executemany(
-            "INSERT INTO person_statistics(id, start_funds, arrival, access, call_start, finished, insufficient_funds) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            starting_statistics,
+            "INSERT INTO start_satisfaction(num_phones, id, satisfaction) VALUES (?, ?, ?)",
+            start_satisfaction,
         )
 
         # Setup and start the simulation
