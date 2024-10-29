@@ -1,10 +1,11 @@
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
-
-WITH_DROP = True
+import sys
 
 if __name__ == "__main__":
+    with_drop = len(sys.argv) > 1
+
     plt.close("all")
 
     person_statistics = None
@@ -14,8 +15,8 @@ if __name__ == "__main__":
         person_statistics = pd.read_sql("SELECT * FROM person_statistics", db)
         time_series = pd.read_sql("SELECT * FROM time_series", db)
 
-    title = " with drop" if WITH_DROP else ""
-    filename = "_with_drop" if WITH_DROP else ""
+    title = " with drop" if with_drop else ""
+    filename = "_with_drop" if with_drop else ""
 
     print(person_statistics["arrival"], person_statistics["access"])
 
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     plt.title(f"Queue size{title}")
     plt.savefig(f"queue_size{filename}.png", dpi=600)
 
-    if WITH_DROP:
+    if with_drop:
         df = time_series
         df = df[["timestamp", "total_drops"]]
         df.set_index("timestamp", inplace=True)
