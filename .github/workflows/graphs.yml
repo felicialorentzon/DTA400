@@ -1,0 +1,17 @@
+name: Generate graphs
+run-name: Generate graphs
+on: [push]
+jobs:
+  generate-graphs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.13' 
+    - run: pip install -r requirements.txt
+    - run: ./generate_data.sh
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        path: ${{ github.workspace }}/*.png
