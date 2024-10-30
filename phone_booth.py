@@ -1,12 +1,10 @@
 import sys
 import sqlite3
-import random
 import simpy
 import numpy as np
 from math import floor, ceil
 
 # fmt: off
-RANDOM_SEED = 42
 MAX_SATISFACTION = 5                      # The highest level of satisfaction
 MAX_START_SATISFACTION = 5                # The maximum level of satisfaction a person can start with
 MIN_START_SATISFACTION = 2                # The minimum level of satisfaction a person can start with
@@ -279,9 +277,6 @@ if __name__ == "__main__":
             "INSERT INTO start_satisfaction(num_phones, id, satisfaction) VALUES (?, ?, ?)",
             start_satisfaction,
         )
-
-        # Setup and start the simulation
-        random.seed(RANDOM_SEED)  # This helps to reproduce the results
 
         # Start the setup process
         env.process(setup(env, cursor, proxy_persons, AVERAGE_TIME_INTERVAL))
