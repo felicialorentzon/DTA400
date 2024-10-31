@@ -1,41 +1,41 @@
 from math import factorial
 
 
-def rho(c, lamb, mu):
-    return lamb / (c * mu)
+def rho(lamb, mu):
+    return lamb / mu
 
 
-def pi0(c, lamb, mu):
+def p0(c, lamb, mu):
     result = 0
-    for k in range(c):
-        result += ((c * rho(c, lamb, mu)) ** k) / factorial(k)
-    result += (
-        ((c * rho(c, lamb, mu)) ** c) / factorial(c) * (1 / (1 - rho(c, lamb, mu)))
-    )
-    return result
+
+    for n in range(c):
+        result += (rho(lamb, mu) ** n) / factorial(n)
+
+    result += ((rho(lamb, mu)) ** c) / (factorial(c) * (1 - rho(lamb, mu) / c))
+
+    return result ** (-1)
 
 
-def C(c, lamb, mu):
-    intermediate = 0
-    for k in range(c):
-        intermediate += ((c * rho(c, lamb, mu)) ** k) / factorial(k)
-    return 1 / (
-        1
-        + (1 - rho(c, lamb, mu))
-        * (factorial(c) / ((c * rho(c, lamb, mu) ** c) * intermediate))
+def expected_average_queue_length(c, lamb, mu):
+    return (
+        p0(c, lamb, mu)
+        * ((rho(lamb, mu) ** (c + 1)) / (c * factorial(c)))
+        * (1 / ((1 - rho(lamb, mu) / c) ** 2))
     )
 
 
-def average(c, lamb, mu):
-    return rho(c, lamb, mu) / (1 - rho(c, lamb, mu)) * C(c, lamb, mu) + c * rho(
-        c, lamb, mu
-    )
+def expected_average_number_in_the_systems(c, lamb, mu):
+    return expected_average_queue_length(c, lamb, mu) + rho(lamb, mu)
 
 
-def customers_in_queue(c, lamb, mu):
-    return rho(c, lamb, mu) / (1 - rho(c, lamb, mu)) * C(c, lamb, mu)
+def expected_total_time(c, lamb, mu):
+    return expected_average_number_in_the_systems(c, lamb, mu) / lamb
+
+
+def expected_average_waiting_time(c, lamb, mu):
+    return expected_total_time(c, lamb, mu) - 1 / mu
 
 
 if __name__ == "__main__":
-    print(average(20, 30, 7.5))
-    print(customers_in_queue(20, 30, 7.5))
+    print("Average time:", expected_average_waiting_time(10, 13, 7.5))
+    print("Average length:", expected_average_queue_length(10, 13, 7.5))
