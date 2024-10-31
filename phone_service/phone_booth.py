@@ -228,6 +228,27 @@ if __name__ == "__main__":
     print(f"Arrival rate: {arrival_rate}")
 
     with sqlite3.connect("statistics.db", autocommit=True) as db:
+        cursor = db.cursor()
+
+        try:
+            cursor.execute("CREATE TABLE rates(num_phones, service, arrival)")
+        except Exception:
+            printer("Table rates already exists")
+
+        rates = [
+            (
+                num_phones,
+                average_service_rate,
+                arrival_rate,
+            )
+        ]
+
+        printer("Inserting rate data into database")
+        cursor.executemany(
+            "INSERT INTO rates(num_phones, service, arrival) VALUES (?, ?, ?)",
+            rates,
+        )
+
         # Create an environment
         env = simpy.Environment()
 
@@ -255,8 +276,6 @@ if __name__ == "__main__":
             )
             for proxy_person in proxy_persons
         ]
-
-        cursor = db.cursor()
 
         try:
             cursor.execute(
