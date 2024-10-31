@@ -10,8 +10,7 @@ def p0(c, lamb, mu):
 
     for n in range(c):
         result += (rho(lamb, mu) ** n) / factorial(n)
-
-    result += ((rho(lamb, mu)) ** c) / (factorial(c) * (1 - rho(lamb, mu) / c))
+        result += ((rho(lamb, mu)) ** c) / (factorial(c) * (1 - rho(lamb, mu) / c))
 
     return result ** (-1)
 
@@ -37,5 +36,9 @@ def expected_average_waiting_time(c, lamb, mu):
 
 
 if __name__ == "__main__":
-    print("Average time:", expected_average_waiting_time(10, 13, 7.5))
-    print("Average length:", expected_average_queue_length(10, 13, 7.5))
+    c = 10
+    lamb = 13
+    mu = 7.5
+    print("Rho?", rho(lamb, mu) / c)
+    print("Average time:", expected_average_waiting_time(c, lamb, mu))
+    print("Average length:", expected_average_queue_length(c, lamb, mu))
