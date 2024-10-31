@@ -3,6 +3,7 @@ import sqlite3
 import simpy
 import numpy as np
 from math import floor, ceil
+from maths import expected_average_queue_length, expected_average_waiting_time
 
 # fmt: off
 MAX_SATISFACTION = 5                      # The highest level of satisfaction
@@ -231,7 +232,9 @@ if __name__ == "__main__":
         cursor = db.cursor()
 
         try:
-            cursor.execute("CREATE TABLE rates(num_phones, service, arrival)")
+            cursor.execute(
+                "CREATE TABLE rates(num_phones, service, arrival, expected_waiting_time, expected_queue_length)"
+            )
         except Exception:
             printer("Table rates already exists")
 
@@ -240,12 +243,18 @@ if __name__ == "__main__":
                 num_phones,
                 average_service_rate,
                 arrival_rate,
+                expected_average_waiting_time(
+                    num_phones, arrival_rate, average_service_rate
+                ),
+                expected_average_queue_length(
+                    num_phones, arrival_rate, average_service_rate
+                ),
             )
         ]
 
         printer("Inserting rate data into database")
         cursor.executemany(
-            "INSERT INTO rates(num_phones, service, arrival) VALUES (?, ?, ?)",
+            "INSERT INTO rates(num_phones, service, arrival, expected_waiting_time, expected_queue_length) VALUES (?, ?, ?, ?, ?)",
             rates,
         )
 
