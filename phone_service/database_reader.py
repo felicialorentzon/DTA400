@@ -57,7 +57,7 @@ if __name__ == "__main__":
     plt.xlabel("Number of phones")
     plt.ylabel("Queue length")
     plt.title("Expected queue length")
-    plt.savefig(f"expected_queue_length-{arrival_rate}.png", dpi=600)
+    plt.savefig(f"expected-queue-length-{arrival_rate}.png", dpi=600)
 
     expected_waiting_time = rates[["num_phones", "expected_waiting_time"]]
     expected_waiting_time.set_index("num_phones", inplace=True)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     plt.xlabel("Number of phones")
     plt.ylabel("Waiting time")
     plt.title("Expected waiting time")
-    plt.savefig(f"expected_waiting_time-{arrival_rate}.png", dpi=600)
+    plt.savefig(f"expected-waiting-time-{arrival_rate}.png", dpi=600)
 
     print(averages)
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     plt.xlabel("Number of phones")
     plt.ylabel("People in queue")
     plt.title("Average queue size upon arrival")
-    plt.savefig(f"queue_size-{arrival_rate}.png", dpi=600)
+    plt.savefig(f"queue-size-{arrival_rate}.png", dpi=600)
 
     queue_time = averages[["num_phones", "queue_time"]]
     queue_time.set_index("num_phones", inplace=True)
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     plt.xlabel("Number of phones")
     plt.ylabel("Time in queue")
     plt.title("Average queue time upon exit")
-    plt.savefig(f"queue_time-{arrival_rate}.png", dpi=600)
+    plt.savefig(f"queue-time-{arrival_rate}.png", dpi=600)
 
     satisfaction = averages[["num_phones", "satisfaction"]]
     satisfaction.set_index("num_phones", inplace=True)
