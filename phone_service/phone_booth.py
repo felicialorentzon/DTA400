@@ -227,7 +227,7 @@ if __name__ == "__main__":
         exit(1)
 
     average_service_rate = num_phones / (MAX_CALL_TIME / 2) * 60
-    average_time_interval = arrival_rate / 60 # The interval a person arrives
+    average_time_interval = 60 / arrival_rate # The interval a person arrives
 
     print(f"Service rate: {average_service_rate}")
     print(f"Arrival rate: {arrival_rate}")
