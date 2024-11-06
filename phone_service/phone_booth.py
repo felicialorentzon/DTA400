@@ -3,7 +3,6 @@ import sqlite3
 import simpy
 import numpy as np
 from math import floor, ceil
-from maths import expected_average_queue_length, expected_average_waiting_time
 
 # fmt: off
 MAX_SATISFACTION = 5                      # The highest level of satisfaction
@@ -17,7 +16,6 @@ NUM_PERSONS = 800                         # Number of persons in the group
 CALL_DROP_RATE = 0.95                     # The probability that calls are droped when high load
 CALL_DROP_AMOUNT = 30                     # The number of active calls required before service starts failing
 ARRIVAL_RATE = 13                         # How many persons that join the system per hour
-AVERAGE_TIME_INTERVAL = ARRIVAL_RATE / 60 # The interval a person arrives
 FRUSTRATION_INTERVAL = 10                 # The time in minutes between a decrement in satisfaction
 LOGGING = False
 # fmt: on
@@ -212,8 +210,8 @@ def setup(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        print("Missing number of phones argument")
+    if len(sys.argv) <= 2:
+        print("Usage: python phone_booth.py <num_phones> <arrival_rate>")
         exit(1)
 
     try:
@@ -222,8 +220,14 @@ if __name__ == "__main__":
         print("Number of phones must be an integer")
         exit(1)
 
+    try:
+        arrival_rate = int(sys.argv[2])
+    except Exception:
+        print("Arrival rate must be an integer")
+        exit(1)
+
     average_service_rate = num_phones / (MAX_CALL_TIME / 2) * 60
-    arrival_rate = ARRIVAL_RATE
+    average_time_interval = arrival_rate / 60 # The interval a person arrives
 
     print(f"Service rate: {average_service_rate}")
     print(f"Arrival rate: {arrival_rate}")
@@ -243,18 +247,12 @@ if __name__ == "__main__":
                 num_phones,
                 average_service_rate,
                 arrival_rate,
-                expected_average_waiting_time(
-                    num_phones, arrival_rate, average_service_rate
-                ),
-                expected_average_queue_length(
-                    num_phones, arrival_rate, average_service_rate
-                ),
             )
         ]
 
         printer("Inserting rate data into database")
         cursor.executemany(
-            "INSERT INTO rates(num_phones, service, arrival, expected_waiting_time, expected_queue_length) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO rates(num_phones, service, arrival) VALUES (?, ?, ?)",
             rates,
         )
 
@@ -307,7 +305,7 @@ if __name__ == "__main__":
         )
 
         # Start the setup process
-        env.process(setup(env, cursor, proxy_persons, AVERAGE_TIME_INTERVAL))
+        env.process(setup(env, cursor, proxy_persons, average_time_interval))
 
         # Execute!
         env.run()
